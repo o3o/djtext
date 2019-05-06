@@ -1,5 +1,6 @@
 // Copyright 2013 Gushcha Anton
-module djtext;
+module djtext.core;
+
 import std.experimental.logger;
 
 /**
