@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/djtext
+djtext.so
+djtext.dylib
+djtext.dll
+djtext.a
+libdjtext.a
+djtext.lib
+djtext-test-*
+*.fuzzy
+*.exe
+*.o
+*.obj
+*.lst

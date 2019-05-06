@@ -1,0 +1,5 @@
+name "djtext"
+description "Library for text internationalization inspired by gettext."
+authors "Orfeo Da Viá"
+copyright "Copyright © 2019, Orfeo Da Viá"
+license "Boost"
