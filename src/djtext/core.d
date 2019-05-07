@@ -11,7 +11,7 @@ enum BASE_LOCALE = "en_US";
 /**
  * Language file extension
  */
-enum LOCALE_EXTESION = ".json";
+enum LOCALE_EXTENSION = ".json";
 
 private string _defaultLocale = BASE_LOCALE;
 private string[string][string] localeMap;
@@ -99,15 +99,13 @@ void loadLocaleFile(string name) {
    import std.path : baseName;
    import std.file : readText;
    import std.string : endsWith;
-   import std.json;
+   import std.json : parseJSON, JSONValue;
 
-   //import vibe.data.json: Json, parseJsonString;
-
-   if (!name.endsWith(LOCALE_EXTESION)) {
-      name ~= LOCALE_EXTESION;
+   if (!name.endsWith(LOCALE_EXTENSION)) {
+      name ~= LOCALE_EXTENSION;
    }
 
-   auto localeName = baseName(name, LOCALE_EXTESION);
+   auto localeName = baseName(name, LOCALE_EXTENSION);
    if (localeName !in localeMap) {
       localeMap[localeName] = ["" : ""];
    }
@@ -131,10 +129,11 @@ void saveFuzzyText() {
    foreach (locale, strs; fuzzyText) {
       try {
          auto file = new File(getFuzzyLocaleFileName(locale), "wr");
-         scope (exit)
+         scope (exit) {
             file.close;
-         file.writeln('{');
+         }
 
+         file.writeln('{');
          foreach (i, s; strs) {
             string row = `    "` ~ s ~ `" : "` ~ s ~ `"`;
             if (i++ == strs.length - 1) {
@@ -215,4 +214,10 @@ unittest {
 
    auto x = new Test();
    assert(x.getHello() == "Ciao");
+}
+
+unittest {
+   loadLocaleFile("./locale/dup.json");
+   defaultLocale = "dup";
+   assert(_("Hello") == "Second");
 }
