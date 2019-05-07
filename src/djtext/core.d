@@ -4,13 +4,13 @@ module djtext.core;
 import std.experimental.logger;
 
 /**
-* Special locale that doesn't have own locale file.
-*/
+ * Special locale that doesn't have own locale file.
+ */
 enum BASE_LOCALE = "en_US";
 
 /**
-* Language file extension
-*/
+ * Language file extension
+ */
 enum LOCALE_EXTESION = ".json";
 
 private string _defaultLocale = BASE_LOCALE;
@@ -18,24 +18,24 @@ private string[string][string] localeMap;
 private string[][string] fuzzyText;
 
 /**
-*   Returns translated string $(B s) for specified $(B locale). If locale is empty default
-*   locale will be taken. If locale name is equal to base locale $(B s) string is returned
-*   without modification.
-*
-*   Localization strings are taken from special files previosly loaded into memory.
-*
-*   If string $(B s) isn't persists in locale strings it will be put into fuzzy text map.
-*   Fuzzy strings is saved in separate file for each locale to be translated later.
-*
-*   See_Also: BASE_LOCALE, defaultLocale properties.
-*
-*   Example:
-*   --------
-*   assert(getdtext("Hello, world!", "ru_RU") == "Привет, мир!");
-*   assert(getdtext("Hello, world!", "es_ES") == "Hola, mundo!");
-*   assert(getdtext("") == "");
-*   --------
-*/
+ * Returns translated string $(B s) for specified $(B locale). If locale is empty default
+ * locale will be taken. If locale name is equal to base locale $(B s) string is returned
+ * without modification.
+ *
+ * Localization strings are taken from special files previosly loaded into memory.
+ *
+ * If string $(B s) isn't persists in locale strings it will be put into fuzzy text map.
+ * Fuzzy strings is saved in separate file for each locale to be translated later.
+ *
+ * See_Also: BASE_LOCALE, defaultLocale properties.
+ *
+ * Example:
+ * --------
+ * assert(getdtext("Hello, world!", "ru_RU") == "Привет, мир!");
+ * assert(getdtext("Hello, world!", "es_ES") == "Hola, mundo!");
+ * assert(getdtext("") == "");
+ * --------
+ */
 string getdtext(string s, string locale = "") {
    import std.algorithm : find;
 
@@ -62,41 +62,39 @@ string getdtext(string s, string locale = "") {
 }
 
 /// Short name for getdtext
-//alias getdtext _;
 alias _ = getdtext;
 
 /**
-*   Setups current locale name. If empty string is passed to
-*   $(B getdtext) then default locale will be taken.
-*
-*   Example:
-*   --------
-*   defaultLocale = "ru_RU";
-*   defaultLocale = BASE_LOCALE;
-*   --------
-*/
+ * Setups current locale name. If empty string is passed to
+ * $(B getdtext) then default locale will be taken.
+ *
+ * Example:
+ * --------
+ * defaultLocale = "ru_RU";
+ * defaultLocale = BASE_LOCALE;
+ * --------
+ */
 void defaultLocale(string locale) {
    _defaultLocale = locale;
 }
 
 /**
-*   Returns current locale name. If empty string is passed to
-*   $(B getdtext) then default locale will be taken.
-*/
+ * Returns current locale name. If empty string is passed to
+ * $(B getdtext) then default locale will be taken.
+ */
 string defaultLocale() {
    return _defaultLocale;
 }
 
 /**
-*   Manuall loads localization file with $(B name). May be usefull to
-*   load localization during program execution.
-*
-*   Example:
-*   --------
-*   loadLocaleFile("ru_RU");
-*   loadLocaleFile("es_ES");
-*   --------
-*/
+ * Manuall loads localization file with $(B name).
+ *
+ * Example:
+ * --------
+ * loadLocaleFile("ru_RU");
+ * loadLocaleFile("es_ES");
+ * --------
+ */
 void loadLocaleFile(string name) {
    import std.path : baseName;
    import std.file : readText;
@@ -129,10 +127,12 @@ private string getFuzzyLocaleFileName(string locale) {
 
 void saveFuzzyText() {
    import std.stdio : File;
+
    foreach (locale, strs; fuzzyText) {
       try {
          auto file = new File(getFuzzyLocaleFileName(locale), "wr");
-         scope (exit) file.close;
+         scope (exit)
+            file.close;
          file.writeln('{');
 
          foreach (i, s; strs) {
@@ -162,28 +162,57 @@ unittest {
    saveFuzzyText();
 }
 
-
+/**
+ * Loads all localization files in `dir`
+ *
+ * Params:
+ *  dir = The directory to iterate over.*
+ */
 void loadAllLocales(string dir) {
-   import std.algorithm : filter;
+   import std.algorithm : filter, each;
+
+   //import std.algorithm.searching: endsWith;
+   import std.string : endsWith;
    import std.file : dirEntries, SpanMode;
 
-   auto locFiles = filter!`endsWith(a.name,".json")`(dirEntries(dir, SpanMode.shallow));
-   foreach (entry; locFiles) {
-      try {
-         loadLocaleFile(entry.name);
-      } catch (Exception e) {
-         import std.stdio;
+   //auto locFiles = dirEntries(dir, SpanMode.shallow).filter!(f => f.name.endsWith(".json"));
+   dirEntries(dir, SpanMode.shallow).filter!(f => f.name.endsWith(".json"))
+      .each!(f => loadLocaleFile(f.name));
+   /+
+      //auto locFiles = filter!`endsWith(a.name,".json")`(dirEntries(dir, SpanMode.shallow));
+      foreach (entry; locFiles) {
+         try {
+            loadLocaleFile(entry.name);
+         } catch (Exception e) {
+            import std.stdio;
 
-         writeln("Failed to load localization file ", entry.name, ". Reason: ", e.msg);
+            writeln("Failed to load localization file ", entry.name, ". Reason: ", e.msg);
+         }
       }
-   }
+   +/
 }
 
 unittest {
    loadAllLocales("./locale");
    defaultLocale = "ru";
-   assert(_("Hello, world!")  ==  "Привет, мир!");
-   assert(_("Hello, world!", "es")  ==  "Hola, mundo!") ;
+   assert(_("Hello, world!") == "Привет, мир!");
+   assert(_("Hello, world!", "es") == "Hola, mundo!");
    assert(getdtext("") == "");
    assert(getdtext("cul") == "cul");
+}
+
+unittest {
+   class Test {
+      string getHello() {
+         return _("Hello");
+      }
+   }
+
+   //this setting also takes effect in the test module
+   defaultLocale = "it";
+   loadAllLocales("./locale");
+   assert(_("Hello") == "Ciao");
+
+   auto x = new Test();
+   assert(x.getHello() == "Ciao");
 }
