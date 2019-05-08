@@ -61,7 +61,7 @@ private string[][string] fuzzyText;
  * --------
  */
 string getdtext(string s, string locale = "") {
-   import std.algorithm : find;
+   import std.algorithm : canFind;
 
    if (locale == "") {
       locale = defaultLocale;
@@ -79,7 +79,7 @@ string getdtext(string s, string locale = "") {
    if (locale !in fuzzyText) {
       fuzzyText[locale] = [];
    }
-   if (fuzzyText[locale].find(s) == []) {
+   if (!fuzzyText[locale].canFind(s)) {
       fuzzyText[locale] ~= s;
    }
    return s;
@@ -161,14 +161,14 @@ void saveFuzzyText() {
          scope (exit) {
             file.close;
          }
-
+         bool firstRow = true;
          foreach (i, s; strs) {
-            string row = `    "` ~ s ~ `" : "~` ~ s ~ `~"`;
-            if (i++ == strs.length - 1) {
-               file.writeln(row);
+            if (firstRow) {
+               firstRow = false;
             } else {
-               file.writeln(row ~ ",");
+               file.writeln(",");
             }
+            file.write(`    "` ~ s ~ `" : "~` ~ s ~ `~"`);
          }
       } catch (Exception e) {
          errorf("Failed to save fuzzy text for locale %s", locale);
