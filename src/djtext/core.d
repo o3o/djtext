@@ -14,7 +14,31 @@ enum BASE_LOCALE = "en_US";
 enum LOCALE_EXTENSION = ".json";
 
 private string _defaultLocale = BASE_LOCALE;
+
+/**
+ * Stores translations.
+ *
+ * It is an array of associative array
+ *
+ * Examples:
+ * --------------------
+ *  // key -> string, value -> string[string]
+ *  string[string] h = localeMap["it"];
+ *  assert(h["Hello"] == "Ciao")
+ * --------------------
+ */
 private string[string][string] localeMap;
+/**
+ * Store fuzzy translations.
+ *
+ * It is an array of string array
+ * Examples:
+ * --------------------
+ * // key -> string, value -> string[]
+ * string[] it = fuzzyText["it"];
+ * assert(it[0] == "Testo");
+ * --------------------
+ */
 private string[][string] fuzzyText;
 
 /**
@@ -59,6 +83,15 @@ string getdtext(string s, string locale = "") {
       fuzzyText[locale] ~= s;
    }
    return s;
+}
+
+unittest {
+   getdtext("Hola", "es");
+   assert("es" in fuzzyText);
+   assert(is(typeof(fuzzyText["en"]) == string[]));
+   assert(fuzzyText["es"].length == 1);
+   string[] esArray = fuzzyText["es"];
+   assert(esArray[0] == "Hola");
 }
 
 /// Short name for getdtext
@@ -119,12 +152,8 @@ void loadLocaleFile(string name) {
    }
 }
 
-private string getFuzzyLocaleFileName(string locale) {
-   return locale ~ ".fuzzy";
-}
-
 void saveFuzzyText() {
-   import std.stdio : File;
+   import std.stdio : File, writeln;
 
    foreach (locale, strs; fuzzyText) {
       try {
@@ -133,20 +162,22 @@ void saveFuzzyText() {
             file.close;
          }
 
-         file.writeln('{');
          foreach (i, s; strs) {
-            string row = `    "` ~ s ~ `" : "` ~ s ~ `"`;
+            string row = `    "` ~ s ~ `" : "~` ~ s ~ `~"`;
             if (i++ == strs.length - 1) {
                file.writeln(row);
             } else {
                file.writeln(row ~ ",");
             }
          }
-         file.write('}');
       } catch (Exception e) {
          errorf("Failed to save fuzzy text for locale %s", locale);
       }
    }
+}
+
+private string getFuzzyLocaleFileName(string locale) {
+   return locale ~ ".fuzzy";
 }
 
 unittest {
@@ -165,30 +196,15 @@ unittest {
  * Loads all localization files in `dir`
  *
  * Params:
- *  dir = The directory to iterate over.*
+ *  dir = The directory to iterate over.
  */
 void loadAllLocales(string dir) {
    import std.algorithm : filter, each;
-
-   //import std.algorithm.searching: endsWith;
    import std.string : endsWith;
    import std.file : dirEntries, SpanMode;
 
-   //auto locFiles = dirEntries(dir, SpanMode.shallow).filter!(f => f.name.endsWith(".json"));
    dirEntries(dir, SpanMode.shallow).filter!(f => f.name.endsWith(".json"))
       .each!(f => loadLocaleFile(f.name));
-   /+
-      //auto locFiles = filter!`endsWith(a.name,".json")`(dirEntries(dir, SpanMode.shallow));
-      foreach (entry; locFiles) {
-         try {
-            loadLocaleFile(entry.name);
-         } catch (Exception e) {
-            import std.stdio;
-
-            writeln("Failed to load localization file ", entry.name, ". Reason: ", e.msg);
-         }
-      }
-   +/
 }
 
 unittest {
