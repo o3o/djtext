@@ -60,7 +60,7 @@ private string[][string] fuzzyText;
  * assert(getdtext("") == "");
  * --------
  */
-string getdtext(string s, string locale = "") {
+string getdtext(string s, string locale = "") @safe {
    import std.algorithm : canFind;
 
    if (locale == "") {
@@ -107,7 +107,7 @@ alias _ = getdtext;
  * defaultLocale = BASE_LOCALE;
  * --------
  */
-void defaultLocale(string locale) {
+void defaultLocale(string locale) @safe {
    _defaultLocale = locale;
 }
 
@@ -115,7 +115,7 @@ void defaultLocale(string locale) {
  * Returns current locale name. If empty string is passed to
  * $(B getdtext) then default locale will be taken.
  */
-string defaultLocale() {
+string defaultLocale() @safe {
    return _defaultLocale;
 }
 
