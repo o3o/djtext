@@ -162,6 +162,7 @@ void saveFuzzyText() {
             file.close;
          }
          bool firstRow = true;
+         file.writeln("{");
          foreach (i, s; strs) {
             if (firstRow) {
                firstRow = false;
@@ -170,6 +171,8 @@ void saveFuzzyText() {
             }
             file.write(`    "` ~ s ~ `" : "~` ~ s ~ `~"`);
          }
+         file.writeln("");
+         file.writeln("}");
       } catch (Exception e) {
          errorf("Failed to save fuzzy text for locale %s", locale);
       }
